@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+   
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title style="padding: center;">Sensores y utils</title>
+    <link rel="icon" href="data:,">
+    <style type="text/css">
+    html {
+        margin: 5px;
+        font-family: Helvetica;
+        display: inline-block;
+        margin: 2px auto;
+        text-align: center;
+        padding: 0vh;
+        background-size: cover;
+    }
+
+    h1,h2 {
+        text-align: center;
+        color: #000f2c;
+        padding: 1vh;
+    }
+
+    p {
+        margin: 0 5px;
+        padding: 2h;
+        font-size: 1.5rem;
+        
+    }
+    table{
+        margin: auto;
+        padding: 1vh;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    td, tr {
+    
+        margin: auto;
+        padding: 10px;
+        font-size: 20px;
+    }
+
+    .Button {
+        position: relative;
+        cursor: pointer;
+        color: white;          
+        font-weight: bold;
+        font-style: italic;
+        padding: 5v;
+        margin: 5px 5px 0px 5px;
+        text-decoration: none;
+        font-size: 20px;
+        font-family: Arial;
+        width: 120px;
+        height: 50px;
+        border-width: 1px;
+        border-radius: 5px;
+        text-shadow: 0px 2px 0px black;
+        box-shadow: 3px 4px 0px 0px rgba(95, 95, 95, 0.651);
+    }
+    .LedToggle {
+        background:dodgerblue;
+    }
+    .LedPas {
+        background: orange;
+    }
+    .BM280Off{
+        background: red;
+    }
+    .BM280On{
+        background: green;
+    }
+    .BM280Update{
+        background: rgb(0, 68, 255);
+    }
+    .Button:active{
+        
+        background: rgb(231, 228, 228);
+    }
+    .LedToggle:active {
+        color: dodgerblue;
+    }
+    .LedPas:active {
+        color:  orange;
+    }
+    .BM280On:active{
+        color: green;
+    }
+    .BM280Off:active{
+        color: red;
+    }
+    .BM280Update:active{
+        color: rgb(0, 68, 255);
+    }
+
+    </style>
+</head>
+<body>
+    <head>
+        <h1>Sensores y utils</h1>
+    </head>
+    
+    <table>
+        <tbody>
+        <div>
+            <tr>
+                <td><h2>Leds</h2></td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="/?led1Toggle"><button class="LedToggle Button">Toggle</button></a>
+                </td>
+                <td>
+                    <a href="/?led1Pas"><button class="LedPas Button">State</button></a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Estado Led: </p>
+                </td>
+                <td>
+                    <strong>%s</strong>
+                </td>
+            </tr>
+        </div>    
+        <div>
+            <tr>
+                <td><h2>Sensores</h2></td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="/?BM280Off"><button class="BM280Off Button">Apagar</button></a>
+                </td>
+                <td>
+                    <a href="/?BM280On"><button class="BM280On Button">Encender</button></a>
+                </td>
+        
+                <td>
+                    <a href="/?BM280Refres"><button class="BM280Update Button">Actualizar</button></a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Who ami: </p>
+                </td>
+                <td>
+                    <strong> 0x%x </strong>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Temperatura: </p>
+                </td>
+                <td>
+                    <strong>%.2f C</strong>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Humedad: </p>
+                </td>
+                <td>
+                    <strong>%.2f &#37;</strong>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Presion: </p>
+                </td>
+                <td>
+                    <strong>%.2f Pa</strong>
+                </td>
+            </tr>
+        </div>
+    </tbody>
+    </table>
+</body>
+</html>
