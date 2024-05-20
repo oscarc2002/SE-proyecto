@@ -16,6 +16,21 @@
         background-size: cover;
     }
 
+    body {
+        /* Establece un degradado lineal */
+        background: linear-gradient(to bottom, rgb(3, 206, 3), white);
+        font-family: Arial, sans-serif;
+        color: #333;
+        padding: 0;
+        margin: 0;
+    }
+
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
     h1,h2 {
         text-align: center;
         color: #000f2c;
@@ -28,12 +43,14 @@
         font-size: 1.5rem;
         
     }
+
     table{
         margin: auto;
         padding: 1vh;
         border-collapse: separate;
         border-spacing: 0;
     }
+
     td, tr {
     
         margin: auto;
@@ -93,52 +110,70 @@
     .BM280Update:active{
         color: rgb(0, 68, 255);
     }
+    meter {
+        -webkit-writing-mode: horizontal-tb !important;
+        appearance: auto;
+        box-sizing: border-box;
+        display: inline-block;
+        height: 5em;
+        width: 13em;
+        vertical-align: -1.0em;
+        -webkit-user-modify: read-only !important;
+    }
 
     </style>
+
+    <script> //Recargar la pagina
+        setInterval(updateValues, 2000);
+
+        function updateValues() {
+            location.reload(); 
+        }
+    </script>
+
+    <script> //Actualizar imágenes
+        function updateValues() {
+            
+            var temperature = parseFloat(document.getElementById('temperature-value').innerText);
+            var humidity = parseFloat(document.getElementById('humidity-value').innerText);
+            var light = parseInt(document.getElementById('light-value').innerText);
+            var imageElement = document.getElementById('temperature-image');
+
+            if (temperature > 40) {
+                imageElement.src = 'imagenes/imagen_calor.png';
+            } else {
+                imageElement.src = 'imagenes/imagen_frio.png';
+            }
+
+            var imageElement = document.getElementById('humidity-image');
+
+            if (humidity > 50) {
+                imageElement.src = 'imagenes/imagen_humedo.png';
+            } else {
+                imageElement.src = 'imagenes/imagen_no_humedo.png';
+            }
+
+            if (light > 50) {
+                imageElement.src = 'imagenes/imagen_mucha_luz.png';
+            } else {
+                imageElement.src = 'imagenes/imagen_poca_luz.png';
+            }
+        }
+
+        setInterval(updateValues, 2000);
+    </script>
 </head>
+<!--<bodyonload="updateValues()">-->
 <body>
     <head>
-        <h1>Sensores y utils</h1>
+        <h1 style="font-family: 'Montserrat', sans-serif;">Proyecto Sistemas Embebidos</h1>
     </head>
     
     <table>
         <tbody>
         <div>
             <tr>
-                <td><h2>Leds</h2></td>
-            </tr>
-            <tr>
-                <td>
-                    <a href="/?led1Toggle"><button class="LedToggle Button">Toggle</button></a>
-                </td>
-                <td>
-                    <a href="/?led1Pas"><button class="LedPas Button">State</button></a>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <p>Estado Led: </p>
-                </td>
-                <td>
-                    <strong>%s</strong>
-                </td>
-            </tr>
-        </div>    
-        <div>
-            <tr>
                 <td><h2>Sensores</h2></td>
-            </tr>
-            <tr>
-                <td>
-                    <a href="/?BM280Off"><button class="BM280Off Button">Apagar</button></a>
-                </td>
-                <td>
-                    <a href="/?BM280On"><button class="BM280On Button">Encender</button></a>
-                </td>
-        
-                <td>
-                    <a href="/?BM280Refres"><button class="BM280Update Button">Actualizar</button></a>
-                </td>
             </tr>
             <tr>
                 <td>
@@ -153,7 +188,8 @@
                     <p>Temperatura: </p>
                 </td>
                 <td>
-                    <strong>%.2f C</strong>
+                    <strong id="temperature-value">%.2f C</strong>
+                    <img id="temperature-image" src="imagenes/imagen_calor.png" alt="Temperatura" width="40" height="40">
                 </td>
             </tr>
             <tr>
@@ -161,7 +197,8 @@
                     <p>Humedad: </p>
                 </td>
                 <td>
-                    <strong>%.2f &#37;</strong>
+                    <strong id="humidity-value">%.2f &#37;</strong>
+                    <img id="humidity-image" src="imagenes/imagen_humedo.png" alt="Humedad" width="40" height="40">
                 </td>
             </tr>
             <tr>
@@ -169,8 +206,22 @@
                     <p>Presion: </p>
                 </td>
                 <td>
-                    <strong>%.2f Pa</strong>
+                    <strong >%.2f Pa</strong>
+                    <img  src="imagenes/imagen_presion.png" alt="Presion" width="40" height="40">
                 </td>
+            </tr>
+            <tr>
+                <td>
+                    <p>Porcentaje de luz:</p>
+                </td>
+                <td>
+                    <strong id="light-value"> %d &#37;</strong>
+                    <meter id="fuel" min="0" max="99" low="30" high="70" optimum="80" value="%i">
+                        at 50/100
+                    </meter>
+                    <img src="imagenes/imagen_mucha_luz.png" alt="Presion" width="60" height="60">
+                </td>
+                
             </tr>
         </div>
     </tbody>
