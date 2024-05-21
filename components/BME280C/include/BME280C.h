@@ -78,6 +78,9 @@
 #define dig_H6     (0xE7)
 #endif
 
+extern const char *On;
+extern const char *Off;
+
 typedef struct calib_Temp_tag
 {
     uint16_t values[3];
@@ -94,7 +97,7 @@ typedef struct calib_Hum_tag
     uint16_t valuesu16[3];
 } calib_Hum_t;
 
-typedef struct sensor_values_tag
+typedef struct BME280_tag
 {
     uint8_t whoami;
     int32_t t_fine;
@@ -103,13 +106,23 @@ typedef struct sensor_values_tag
     float press;
     bool state;
     TaskHandle_t task;
-} sensor_value_t;
+} BME280_t;
 
+typedef struct Utils_tag
+{
+    BME280_t BME280;
+    bool ledState;
+    const char *ledState_char;
+}Utils_t;
+
+#if(MODOESP == SLAVE1)
 const static uint8_t dir_CTemp[] = {dig_T1_LSB, dig_T2_LSB, dig_T3_LSB};
 
 const static uint8_t dir_CPress[] = {dig_P1_LSB, dig_P2_LSB, dig_P3_LSB, dig_P4_LSB, dig_P5_LSB, dig_P6_LSB, dig_P7_LSB, dig_P8_LSB, dig_P9_LSB};
 
 #define LED GPIO_NUM_2
+
+void init_slave1(Utils_t *utils);
 
 void init_BME2890(void);
 
@@ -125,14 +138,15 @@ uint32_t read_Temp();
 
 uint32_t read_Hum();
 
-void calib_Press(sensor_value_t *sens);
+void calib_Press(BME280_t *sens);
 
-void calib_Temp(sensor_value_t *sens);
+void calib_Temp(BME280_t *sens);
 
-void calib_Hum(sensor_value_t *sens);
+void calib_Hum(BME280_t *sens);
 
 void init_led();
 
 void set_led(bool state);
+#endif
 
 #endif

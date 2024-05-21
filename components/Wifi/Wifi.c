@@ -1,17 +1,15 @@
 #include <stdio.h>
 #include "Wifi.h"
+#include "config.h"
 
 static const char *TAG = "softAP_WebServer";
 static char *view_html = NULL;
 static Utils_t utils;
 
-const char On[] = "Encendido";
-const char Off[] = "Apagado";
-
+//#if (MODOESP == MAESTRO)
 static httpd_handle_t start_webserver(void);
 static esp_err_t hello_get_handler(httpd_req_t *req);
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
-static void read_BME280(void *arg);
 
 static const httpd_uri_t hello = {
     .uri = "/",
@@ -27,57 +25,6 @@ void cont_index_html(void)
     view_html = malloc(view_len);
     memcpy(view_html, view_start, view_len);
 
-}
-
-void init_my_wifi(httpd_handle_t *server)
-{
-    init_BME2890();
-    init_led();
-    
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    ESP_LOGI(TAG, "init softAP");
-    ESP_ERROR_CHECK(wifi_init_softap());
-    cont_index_html();
-    utils.ledState_char = Off;
-    utils.ledState = false;
-    utils.BME280.state = true;
-
-    *server = start_webserver();
-    xTaskCreate(read_BME280, "read_BME280", 1024, server, 8, (TaskHandle_t *const)&utils.BME280.task);
-}
-
-esp_err_t wifi_init_softap(void)
-{
-    esp_netif_create_default_wifi_ap();
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
-
-    wifi_config_t wifi_config = {
-        .ap = {
-            .ssid = EXAMPLE_ESP_WIFI_SSID,
-            .ssid_len = strlen(EXAMPLE_ESP_WIFI_SSID),
-            .password = EXAMPLE_ESP_WIFI_PASS,
-            .max_connection = EXAMPLE_MAX_STA_CONN,
-            .authmode = WIFI_AUTH_WPA_WPA2_PSK
-        },
-    };
-    if (strlen(EXAMPLE_ESP_WIFI_PASS) == 0) {
-        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
-    }
-
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-
-    ESP_LOGI(TAG, "Inicializacion de softAP terminada. SSID: %s password: %s",
-             EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
-    return ESP_OK;
 }
 
 static httpd_handle_t start_webserver(void)
@@ -98,16 +45,6 @@ static httpd_handle_t start_webserver(void)
     return NULL;
 }
 
-static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
-{
-    if (event_id == WIFI_EVENT_AP_STACONNECTED) {
-        wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-        ESP_LOGI(TAG, "estacion %X:%X:%X:%X:%X:%X se unio, AID=%d", event->mac[5], event->mac[4],event->mac[3],event->mac[2],event->mac[1],event->mac[0], event->aid);
-    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-        wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-        ESP_LOGI(TAG, "estacion %X:%X:%X:%X:%X:%X se desconecto, AID=%d", event->mac[5], event->mac[4],event->mac[3],event->mac[2],event->mac[1],event->mac[0], event->aid);
-    }
-}
 
 /* An HTTP GET handler */
 static esp_err_t hello_get_handler(httpd_req_t *req)
@@ -180,25 +117,91 @@ static esp_err_t hello_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-static void read_BME280(void *arg)
-{
-    BME280_write_byte(BME280_DIR_CRT_M, (uint8_t) (1 << 7 | 1 << 5 | 1 << 4 | 1 << 2 | 1));
-    BME280_read(BME280_DIR_ID, (uint8_t *) &utils.BME280.whoami, 1);
-    
-    while(1)
-    {
-        calib_Temp(&utils.BME280);
-        calib_Press(&utils.BME280);
-        calib_Hum(&utils.BME280);
+//#endif
 
-        BME280_write_byte(BME280_DIR_CRT_M, (uint8_t) (1 << 7 | 1 << 5 | 1 << 4 | 1 << 2 | 1));
-        if(utils.BME280.state == false)
-        {
-            vTaskSuspend(utils.BME280.task);
-        }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        
-    }
-    vTaskDelete(NULL);
+void init_my_wifi(httpd_handle_t *server)
+{
+
+    ESP_ERROR_CHECK(nvs_flash_init());
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+    ESP_LOGI(TAG, "init softAP");
+    ESP_ERROR_CHECK(init_wifi());
+    
+    cont_index_html();
+
+    *server = start_webserver();
 }
 
+esp_err_t init_wifi(void)
+{
+    esp_netif_create_default_wifi_ap();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+
+#if(MODOESP == MAESTRO)
+    wifi_config_t wifi_config = {
+        .ap = {
+            .ssid = EXAMPLE_ESP_WIFI_SSID,
+            .ssid_len = strlen(EXAMPLE_ESP_WIFI_SSID),
+            .password = EXAMPLE_ESP_WIFI_PASS,
+            .max_connection = EXAMPLE_MAX_STA_CONN,
+            .authmode = WIFI_AUTH_WPA_WPA2_PSK
+        },
+    };
+    if (strlen(EXAMPLE_ESP_WIFI_PASS) == 0) {
+        wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+#else
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = EXAMPLE_ESP_WIFI_SSID,
+            .password = EXAMPLE_ESP_WIFI_PASS,
+            .channel = 0
+        },
+    };
+    
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+#endif
+    
+    ESP_ERROR_CHECK(esp_wifi_start());
+    ESP_LOGI(TAG, "Inicializacion de softAP terminada. SSID: %s password: %s",
+             EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
+    return ESP_OK;
+}
+
+static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
+{
+#if(MODOESP == MAESTRO)
+    if (event_id == WIFI_EVENT_AP_STACONNECTED) 
+    {
+        wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
+        ESP_LOGI(TAG, "estacion %X:%X:%X:%X:%X:%X se unio, AID=%d", event->mac[5], event->mac[4],event->mac[3],event->mac[2],event->mac[1],event->mac[0], event->aid);
+    } 
+    else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) 
+    {
+        wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
+        ESP_LOGI(TAG, "estacion %X:%X:%X:%X:%X:%X se desconecto, AID=%d", event->mac[5], event->mac[4],event->mac[3],event->mac[2],event->mac[1],event->mac[0], event->aid);
+    }
+#else
+    if(event_id == WIFI_EVENT_STA_CONNECTED)
+    {
+        wifi_event_sta_connected_t *event = (wifi_event_sta_connected_t *)event_base;
+        ESP_LOGI(TAG, "AP %s conectado, channel=%d AID=%d", (char *)event->ssid, event->channel, event->aid); 
+    }
+    else if(event_id == WIFI_EVENT_STA_DISCONNECTED)
+    {
+        wifi_event_sta_disconnected_t *event = (wifi_event_sta_disconnected_t *)event_base;
+        ESP_LOGI(TAG, "AP %s desconectado, Reason=%d RSSI=%d", (char *)event->ssid, event->reason, event->rssi);
+    }
+
+#endif
+}

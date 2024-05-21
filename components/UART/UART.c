@@ -1,9 +1,5 @@
-#include "UARTE.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-
-char Buffer[1024];
-int i = 0;
+#include <stdio.h>
+#include "UART.h"
 
 void uart_ini()
 {
@@ -41,7 +37,6 @@ void UART_puts(char* text)
     }
 }
 
-
 char UART_getchar()
 {
     char data[2] = {0}, len;
@@ -53,11 +48,11 @@ char UART_getchar()
     return data[0];
 }
 
-void UART_gets()
+void UART_gets(char *Buffer)
 {
     char data;
-    
-    for(i = 0; ; i++)
+    uint16_t i = 0;
+    while(i < BUFSIZ)
     {
         data = UART_getchar();
 
@@ -65,8 +60,7 @@ void UART_gets()
         {
             UART_putchar(data);
             Buffer[i] = data;
-
-            //esp_spp_write(UART_NUM_0, i, &data);
+            i++;
         }
         else
         {
@@ -74,17 +68,17 @@ void UART_gets()
             switch (data)
             {
                 case 8:
-                    i-=2;
+                    if(i > 1)
+                        i--;
                     UART_puts("\b \b");
                     break;
                 case 13:
                     Buffer[i] = '\0';
-                    //esp_spp_write(UART_NUM_0, i, Buffer);
                     return;
                     break;
                 
                 default:
-                    i -= 2;
+                    i--;
                     break;
             }
         } 

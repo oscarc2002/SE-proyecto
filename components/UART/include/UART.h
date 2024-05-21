@@ -16,7 +16,6 @@
 
 //const char *TAGUART = "MENSAJE";
 
-extern char Buffer[1024];
 
 void uart_ini();
 
@@ -26,7 +25,7 @@ void UART_puts(char *text);
 
 char UART_getchar();
 
-void UART_gets();
+void UART_gets(char *Buffer);
 
 void clrscr(void);
 

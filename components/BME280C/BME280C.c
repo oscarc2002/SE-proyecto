@@ -2,9 +2,15 @@
 #include "BME280C.h"
 #include "sdkconfig.h"
 
+const char *On = "Encendido";
+const char *Off = "Apagado";
+
+#if (MODOESP == SLAVE1)
 static calib_Temp_t ATemp;
 static calib_Press_t APress;
 static calib_Hum_t AHum;
+
+static void read_BME280(void *arg);
 
 static esp_err_t i2c_master_init(void)
 {
@@ -49,6 +55,16 @@ void init_BME2890(void)
     ESP_ERROR_CHECK(BME280_reg_write_byte(BME280_DIR_CONF, (uint8_t) (1 << 4)));
     calib_values();
     return;
+}
+
+void init_slave1(Utils_t *utils)
+{
+    init_BME2890();
+    init_led();
+    utils->ledState_char = Off;
+    utils->ledState = false;
+    utils->BME280.state = true;
+    xTaskCreate(read_BME280, "read_BME280", 1024, &utils->BME280, 8, (TaskHandle_t *const) &utils->BME280.task);
 }
 
 void calib_values(void)
@@ -151,7 +167,7 @@ uint32_t read_Hum()
     return hum;
 }
 
-void calib_Press(sensor_value_t *sens)
+void calib_Press(BME280_t *sens)
 {
     int32_t uncalibPress = read_Press();
     int64_t var1, var2, p;
@@ -176,7 +192,7 @@ void calib_Press(sensor_value_t *sens)
     sens->press = (float)(p / 256);
 }
 
-void calib_Temp(sensor_value_t *sens)
+void calib_Temp(BME280_t *sens)
 {
     int32_t uncalibTemp = (int32_t) read_Temp();
     int32_t var1, var2;
@@ -189,7 +205,7 @@ void calib_Temp(sensor_value_t *sens)
 
 }
 
-void calib_Hum(sensor_value_t *sens)
+void calib_Hum(BME280_t *sens)
 {
     int32_t var1, uncalibHum = read_Hum();
 
@@ -226,3 +242,28 @@ void set_led(bool state)
         gpio_set_level(LED, 0);
     }
 }
+
+static void read_BME280(void *arg)
+{
+    BME280_t *BME280 = (BME280_t *)arg;
+    BME280_write_byte(BME280_DIR_CRT_M, (uint8_t) (1 << 7 | 1 << 5 | 1 << 4 | 1 << 2 | 1));
+    BME280_read(BME280_DIR_ID, (uint8_t *) (&BME280->whoami), 1);
+    
+    while(1)
+    {
+        calib_Temp(BME280);
+        calib_Press(BME280);
+        calib_Hum(BME280);
+
+        BME280_write_byte(BME280_DIR_CRT_M, (uint8_t) (1 << 7 | 1 << 5 | 1 << 4 | 1 << 2 | 1));
+        if(BME280->state == false)
+        {
+            vTaskSuspend(BME280->task);
+        }
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        
+    }
+    vTaskDelete(NULL);
+}
+
+#endif

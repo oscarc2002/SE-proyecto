@@ -1,3 +1,3 @@
-idf_component_register(SRCS "BME280C.c"
+idf_component_register(SRCS "UART.c"
                     INCLUDE_DIRS "include"
                     REQUIRES "driver" "freertos" "Config")

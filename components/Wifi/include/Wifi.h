@@ -24,17 +24,10 @@
 #define EXAMPLE_ESP_WIFI_PASS      "SE_12345678"
 #define EXAMPLE_MAX_STA_CONN       10
 
-typedef struct Utils_tag
-{
-    sensor_value_t BME280;
-    bool ledState;
-    const char *ledState_char;
-}Utils_t;
-
 void cont_index_html(void);
 
 void init_my_wifi(httpd_handle_t *server);
 
-esp_err_t wifi_init_softap(void);
+esp_err_t init_wifi(void);
 
 #endif
