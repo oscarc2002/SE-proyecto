@@ -2,14 +2,16 @@
 #include "Wifi.h"
 #include "config.h"
 
-static const char *TAG = "softAP_WebServer";
-static char *view_html = NULL;
-static Utils_t utils;
 
-//#if (MODOESP == MAESTRO)
+
+static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+#if (MODOESP == MAESTRO)
+static const char *TAG = "softAP_WebServer";
+
+static char *view_html = NULL;
+static Utils_t utils = {0};
 static httpd_handle_t start_webserver(void);
 static esp_err_t hello_get_handler(httpd_req_t *req);
-static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
 static const httpd_uri_t hello = {
     .uri = "/",
@@ -116,31 +118,41 @@ static esp_err_t hello_get_handler(httpd_req_t *req)
      * headers are lost. Check if HTTP request headers can be read now. */
     return ESP_OK;
 }
-
-//#endif
+#else
+    static const char *TAG = "wifi_sta_slave1";
+#endif
 
 void init_my_wifi(httpd_handle_t *server)
 {
 
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
     ESP_LOGI(TAG, "init softAP");
     ESP_ERROR_CHECK(init_wifi());
-    
+#if (MODOESP == MAESTRO)    
     cont_index_html();
 
     *server = start_webserver();
+#else
+    *server = NULL;
+#endif
 }
 
 esp_err_t init_wifi(void)
 {
+    ESP_ERROR_CHECK(nvs_flash_init());
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+    
+
+#if(MODOESP == MAESTRO)
     esp_netif_create_default_wifi_ap();
+    
+#else
+    esp_netif_create_default_wifi_sta();
+#endif
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
 
 #if(MODOESP == MAESTRO)
@@ -159,6 +171,7 @@ esp_err_t init_wifi(void)
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
 #else
     wifi_config_t wifi_config = {
         .sta = {
@@ -170,9 +183,10 @@ esp_err_t init_wifi(void)
     
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+    ESP_ERROR_CHECK(esp_wifi_connect());
 #endif
     
-    ESP_ERROR_CHECK(esp_wifi_start());
     ESP_LOGI(TAG, "Inicializacion de softAP terminada. SSID: %s password: %s",
              EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
     return ESP_OK;

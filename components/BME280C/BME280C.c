@@ -59,12 +59,13 @@ void init_BME2890(void)
 
 void init_slave1(Utils_t *utils)
 {
+    ESP_ERROR_CHECK(init_wifi());
     init_BME2890();
     init_led();
     utils->ledState_char = Off;
     utils->ledState = false;
     utils->BME280.state = true;
-    xTaskCreate(read_BME280, "read_BME280", 1024, &utils->BME280, 8, (TaskHandle_t *const) &utils->BME280.task);
+    xTaskCreate(read_BME280, "read_BME280", 1024*2, &utils->BME280, 8, (TaskHandle_t *const) &utils->BME280.task);
 }
 
 void calib_values(void)
