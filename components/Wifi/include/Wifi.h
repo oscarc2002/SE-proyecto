@@ -24,9 +24,6 @@
 #define EXAMPLE_ESP_WIFI_PASS      "SE_12345678"
 #define EXAMPLE_MAX_STA_CONN       10
 
-void cont_index_html(void);
-
-void init_my_wifi(httpd_handle_t *server);
 
 esp_err_t init_wifi(void);
 

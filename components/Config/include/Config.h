@@ -5,6 +5,6 @@
 #define SLAVE1 (2)
 #define SLAVE2 (3)
 
-//#define MODOESP MAESTRO
-#define MODOESP (SLAVE1)
+#define MODOESP MAESTRO
+//#define MODOESP (SLAVE1)
 #endif
