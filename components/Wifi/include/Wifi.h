@@ -24,6 +24,7 @@
 #define EXAMPLE_ESP_WIFI_PASS      "SE_12345678"
 #define EXAMPLE_MAX_STA_CONN       10
 
+extern esp_ip4_addr_t const *ip_addr;
 
 esp_err_t init_wifi(void);
 

@@ -2,8 +2,13 @@
 #include "Wifi.h"
 #include "config.h"
 
-static const char *TAG = "softAP_WebServer";
+esp_ip4_addr_t const *ip_addr = NULL;
 
+#if(MODOESP == MAESTRO)
+    static const char *TAG = "softAP_WebServer";
+#else
+    static const char *TAG = "wifi_sta_slave1";
+#endif
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
 esp_err_t init_wifi(void)
@@ -23,7 +28,7 @@ esp_err_t init_wifi(void)
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(ESP_EVENT_ANY_BASE, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
 
     #if(MODOESP == MAESTRO)
     wifi_config_t wifi_config = {
@@ -53,7 +58,7 @@ esp_err_t init_wifi(void)
             .channel = 0
         },
     };
-    
+
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
@@ -79,17 +84,31 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
         ESP_LOGI(TAG, "estacion %X:%X:%X:%X:%X:%X se desconecto, AID=%d", event->mac[5], event->mac[4],event->mac[3],event->mac[2],event->mac[1],event->mac[0], event->aid);
     }
     #else
-    if(event_id == WIFI_EVENT_STA_CONNECTED)
+    if(event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
     {
         wifi_event_sta_connected_t *event = (wifi_event_sta_connected_t *)event_base;
-        ESP_LOGI(TAG, "AP %s conectado, channel=%d AID=%d", (char *)event->ssid, event->channel, event->aid); 
+        ESP_LOGI(TAG, "AP %s conectado, channel=%d AID=%d", (char *)event->ssid, event->channel, event->aid);
+        ip_addr = NULL;
     }
-    else if(event_id == WIFI_EVENT_STA_DISCONNECTED)
-    {
+    else if(event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
+    {   
         wifi_event_sta_disconnected_t *event = (wifi_event_sta_disconnected_t *)event_base;
         ESP_LOGI(TAG, "AP %s desconectado, Reason=%d RSSI=%d", (char *)event->ssid, event->reason, event->rssi);
         ESP_ERROR_CHECK(esp_wifi_connect());
     }
+    else if(event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+    {
+        static esp_ip4_addr_t sta_addr = {0};
+        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_base;
 
-    #endif
+        sta_addr = event->ip_info.ip;
+        ip_addr = &sta_addr;
+        ESP_LOGI("IP address 0", IPSTR, IP2STR(&sta_addr));
+        ESP_LOGI("IP address 1", "%" PRIx32 "\n", event->ip_info.ip.addr); 
+    }
+    ESP_LOGI("Base", "%s", event_base);
+    ESP_LOGI("ID", "%d", (int)event_id);
+    //0101 0100 0100 1110 0100 0101 0101 0110
+    //1100 0000 1010 1000 0000 0100 0000 0010
+#endif
 }

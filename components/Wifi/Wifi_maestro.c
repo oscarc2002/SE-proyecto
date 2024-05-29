@@ -124,6 +124,4 @@ void init_my_wifi(httpd_handle_t *server)
     *server = start_webserver();
 }
 
-#else
-    static const char *TAG = "wifi_sta_slave1";
 #endif
