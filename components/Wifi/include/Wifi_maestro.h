@@ -4,8 +4,9 @@
 #include "freertos/task.h"
 #include <esp_log.h>
 #include "Wifi.h"
+#include "paquete.h"
 
-void init_my_wifi(httpd_handle_t *server);
+void init_master(httpd_handle_t *server);
 
 void cont_index_html(void);
 

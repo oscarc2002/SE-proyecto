@@ -8,7 +8,7 @@
 #include "driver/i2c.h"
 #include "driver/gpio.h"
 #include "sdkconfig.h"
-
+#include "Config.h"
 #include "BME280C_types.h"
 #include "Wifi.h"
 
@@ -24,11 +24,11 @@
 #if(MODOESP == SLAVE1)
 const static uint8_t dir_CTemp[] = {dig_T1_LSB, dig_T2_LSB, dig_T3_LSB};
 
-const static uint8_t dir_CPress[] = {dig_P1_LSB, dig_P2_LSB, dig_P3_LSB, dig_P4_LSB, dig_P5_LSB, dig_P6_LSB, dig_P7_LSB, dig_P8_LSB, dig_P9_LSB};
+//const static uint8_t dir_CPress[] = {dig_P1_LSB, dig_P2_LSB, dig_P3_LSB, dig_P4_LSB, dig_P5_LSB, dig_P6_LSB, dig_P7_LSB, dig_P8_LSB, dig_P9_LSB};
 
 #define LED GPIO_NUM_2
 
-void init_slave1(Utils_t *utils);
+void init_slave1(Utils_t *utils, slave_state_t *slave);
 
 void init_BME2890(void);
 
@@ -38,13 +38,13 @@ void BME280_read(uint8_t reg_addr, uint8_t *data, size_t len);
 
 void BME280_write_byte(uint8_t reg_addr, uint8_t data);
 
-uint32_t read_Press();
+//uint32_t read_Press();
 
 uint32_t read_Temp();
 
 uint32_t read_Hum();
 
-void calib_Press(BME280_t *sens);
+//void calib_Press(BME280_t *sens);
 
 void calib_Temp(BME280_t *sens);
 

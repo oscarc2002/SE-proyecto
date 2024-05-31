@@ -89,7 +89,7 @@ typedef struct BME280_tag
     int32_t t_fine;
     float temp;
     float humedad;
-    float press;
+    //float press;
     bool state;
     TaskHandle_t task;
 } BME280_t;

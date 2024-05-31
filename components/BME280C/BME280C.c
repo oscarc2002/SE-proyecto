@@ -7,7 +7,7 @@ const char *Off = "Apagado";
 
 #if (MODOESP == SLAVE1)
 static calib_Temp_t ATemp;
-static calib_Press_t APress;
+//static calib_Press_t APress;
 static calib_Hum_t AHum;
 
 static void read_BME280(void *arg);
@@ -57,15 +57,17 @@ void init_BME2890(void)
     return;
 }
 
-void init_slave1(Utils_t *utils)
+void init_slave1(Utils_t *utils, slave_state_t *slave)
 {
     ESP_ERROR_CHECK(init_wifi());
     init_BME2890();
     init_led();
+    slave->arg = utils;
+    slave->connect_wf = false;
     utils->ledState_char = Off;
     utils->ledState = false;
     utils->BME280.state = true;
-    xTaskCreate(read_BME280, "read_BME280", 1024*2, &utils->BME280, 8, (TaskHandle_t *const) &utils->BME280.task);
+    xTaskCreate(read_BME280, "read_BME280", 1024*16, &utils->BME280, 5, (TaskHandle_t *const) &utils->BME280.task);
 }
 
 void calib_values(void)
@@ -80,12 +82,13 @@ void calib_values(void)
         ATemp.values[i] =(uint16_t) ((buff[1] << 8) | buff[0]);
 
     }
+    /*
     for (i = 0; i < 9; i++)
     {
         BME280_reg_read(dir_CPress[i], &buff[0], 1);
         BME280_reg_read((dir_CPress[i])+1, &buff[1], 1);
         APress.values[i] = (uint16_t) ((buff[1] << 8) | buff[0]);
-    }
+    }*/
 
     BME280_reg_read(dig_H1, &buff[0], 1);
     AHum.valuesu8[0] = buff[0]; // calib_dig_h1
@@ -125,20 +128,6 @@ void BME280_write_byte(uint8_t reg_addr, uint8_t data)
     BME280_reg_write_byte(reg_addr, data);
 }
 
-uint32_t read_Press()
-{
-    uint8_t buff;
-    uint32_t press;
-
-    // 98765432 10987654 3210
-    BME280_reg_read(PRESS_MSB, &buff, 1);
-    press = (buff << 12);
-    BME280_reg_read(PRESS_LSB, &buff, 1);
-    press |= (buff << 4);
-    BME280_reg_read(PRESS_XLS, &buff, 1);
-    press |= (buff >> 4);
-    return press;
-}
 
 uint32_t read_Temp()
 {
@@ -168,6 +157,22 @@ uint32_t read_Hum()
     return hum;
 }
 
+/*
+uint32_t read_Press()
+{
+    uint8_t buff;
+    uint32_t press;
+
+    // 98765432 10987654 3210
+    BME280_reg_read(PRESS_MSB, &buff, 1);
+    press = (buff << 12);
+    BME280_reg_read(PRESS_LSB, &buff, 1);
+    press |= (buff << 4);
+    BME280_reg_read(PRESS_XLS, &buff, 1);
+    press |= (buff >> 4);
+    return press;
+}
+
 void calib_Press(BME280_t *sens)
 {
     int32_t uncalibPress = read_Press();
@@ -191,7 +196,7 @@ void calib_Press(BME280_t *sens)
     var2 = (((int64_t)APress.values[7]) * p) >> 19;
     p = ((p + var1 + var2) >> 8) + (((int64_t)APress.values[6]) << 4);
     sens->press = (float)(p / 256);
-}
+}*/
 
 void calib_Temp(BME280_t *sens)
 {
@@ -253,7 +258,7 @@ static void read_BME280(void *arg)
     while(1)
     {
         calib_Temp(BME280);
-        calib_Press(BME280);
+        //calib_Press(BME280);
         calib_Hum(BME280);
 
         BME280_write_byte(BME280_DIR_CRT_M, (uint8_t) (1 << 7 | 1 << 5 | 1 << 4 | 1 << 2 | 1));

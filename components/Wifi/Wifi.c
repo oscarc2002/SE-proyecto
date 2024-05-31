@@ -8,6 +8,7 @@ esp_ip4_addr_t const *ip_addr = NULL;
     static const char *TAG = "softAP_WebServer";
 #else
     static const char *TAG = "wifi_sta_slave1";
+    slave_state_t *slave_hd = NULL;
 #endif
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 
@@ -51,6 +52,7 @@ esp_err_t init_wifi(void)
     ESP_LOGI(TAG, "Inicializacion de softAP terminada. SSID: %s password: %s",
              EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS);
     #else
+    
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = EXAMPLE_ESP_WIFI_SSID,
@@ -84,18 +86,23 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
         ESP_LOGI(TAG, "estacion %X:%X:%X:%X:%X:%X se desconecto, AID=%d", event->mac[5], event->mac[4],event->mac[3],event->mac[2],event->mac[1],event->mac[0], event->aid);
     }
     #else
+
     if(event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
     {
         wifi_event_sta_connected_t *event = (wifi_event_sta_connected_t *)event_base;
         ESP_LOGI(TAG, "AP %s conectado, channel=%d AID=%d", (char *)event->ssid, event->channel, event->aid);
         ip_addr = NULL;
+        
     }
+
     else if(event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {   
         wifi_event_sta_disconnected_t *event = (wifi_event_sta_disconnected_t *)event_base;
         ESP_LOGI(TAG, "AP %s desconectado, Reason=%d RSSI=%d", (char *)event->ssid, event->reason, event->rssi);
         ESP_ERROR_CHECK(esp_wifi_connect());
+        slave_hd->connect_wf = false;
     }
+
     else if(event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
     {
         static esp_ip4_addr_t sta_addr = {0};
@@ -104,11 +111,9 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
         sta_addr = event->ip_info.ip;
         ip_addr = &sta_addr;
         ESP_LOGI("IP address 0", IPSTR, IP2STR(&sta_addr));
-        ESP_LOGI("IP address 1", "%" PRIx32 "\n", event->ip_info.ip.addr); 
+        ESP_LOGI("IP address 1", "%" PRIx32 "\n", event->ip_info.ip.addr);
+        slave_hd->connect_wf = true;
     }
-    ESP_LOGI("Base", "%s", event_base);
-    ESP_LOGI("ID", "%d", (int)event_id);
-    //0101 0100 0100 1110 0100 0101 0101 0110
-    //1100 0000 1010 1000 0000 0100 0000 0010
+
 #endif
 }
