@@ -1,169 +1,224 @@
+<!DOCTYPE html>
 <html>
-
 <head>
-    <title>ESP32 Web Server</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+   
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title style="padding: center;">Sensores y utils</title>
     <link rel="icon" href="data:,">
-    <style>
-        html {
-            font-family: Helvetica;
-            display: inline-block;
-            margin: 0px auto;
-            text-align: center;
-        }
+    <style type="text/css">
+    html {
+        margin: 5px;
+        font-family: Helvetica;
+        display: inline-block;
+        margin: 2px auto;
+        text-align: center;
+        padding: 0vh;
+        background-size: cover;
+    }
 
-        h1 {
-            color: #0F3376;
-            padding: 2vh;
-        }
+    body {
+        /* Establece un degradado lineal */
+        background: linear-gradient(to bottom, rgb(3, 206, 3), white);
+        font-family: Arial, sans-serif;
+        color: #333;
+        padding: 0;
+        margin: 0;
+    }
 
-        p {
-            font-size: 1.5rem;
-        }
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
 
-        table {
-            margin: auto;
-        }
+    h1,h2 {
+        text-align: center;
+        color: #000f2c;
+        padding: 1vh;
+    }
 
-        td {
-            padding: 10px;
-            font-size: 20px;
-        }
+    p {
+        margin: 0 5px;
+        padding: 2h;
+        font-size: 1.5rem;
+        
+    }
 
-        .Button {
-            
-            display: inline-block;
-            cursor: pointer;
-            color: #ffffff;          
-            font-weight: bold;
-            font-style: italic;
-            padding: 17px 19px;
-            text-decoration: none;
-            font-size: 20px;
-            font-family: Arial;
-            width: 140px;
-            height: 50px;
-            border-width: 1px;
-            border-top-left-radius: 18px;
-            border-top-right-radius: 18px;
-            border-bottom-left-radius: 18px;
-            border-bottom-right-radius: 18px;
-        }
+    table{
+        margin: auto;
+        padding: 1vh;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
 
-        .ButtonR {   
-            border-color: #d02718; 
-            box-shadow: 3px 4px 0px 0px #8a2a21;
-            text-shadow: 0px 1px 0px #810e05;
-            background: linear-gradient(#c62d1f, #f24437);
-        }
+    td, tr {
+    
+        margin: auto;
+        padding: 10px;
+        font-size: 20px;
+    }
 
-        .ButtonR:hover {
-            background: linear-gradient(#f24437, #c62d1f);
-        }
+    .Button {
+        position: relative;
+        cursor: pointer;
+        color: white;          
+        font-weight: bold;
+        font-style: italic;
+        padding: 5v;
+        margin: 5px 5px 0px 5px;
+        text-decoration: none;
+        font-size: 20px;
+        font-family: Arial;
+        width: 120px;
+        height: 50px;
+        border-width: 1px;
+        border-radius: 5px;
+        text-shadow: 0px 2px 0px black;
+        box-shadow: 3px 4px 0px 0px rgba(95, 95, 95, 0.651);
+    }
+    .LedToggle {
+        background:dodgerblue;
+    }
+    .LedPas {
+        background: orange;
+    }
+    .BM280Off{
+        background: red;
+    }
+    .BM280On{
+        background: green;
+    }
+    .BM280Update{
+        background: rgb(0, 68, 255);
+    }
+    .Button:active{
+        
+        background: rgb(231, 228, 228);
+    }
+    .LedToggle:active {
+        color: dodgerblue;
+    }
+    .LedPas:active {
+        color:  orange;
+    }
+    .BM280On:active{
+        color: green;
+    }
+    .BM280Off:active{
+        color: red;
+    }
+    .BM280Update:active{
+        color: rgb(0, 68, 255);
+    }
+    meter {
+        -webkit-writing-mode: horizontal-tb !important;
+        appearance: auto;
+        box-sizing: border-box;
+        display: inline-block;
+        height: 5em;
+        width: 13em;
+        vertical-align: -1.0em;
+        -webkit-user-modify: read-only !important;
+    }
 
-        .Button:active {
-            position: relative;
-            top: 1px;
-        }
-
-        .ButtonG {
-            border-color: #3dd018; 
-            box-shadow: 3px 4px 0px 0px #218a21;
-            text-shadow: 0px 1px 0px #058105;
-            background: linear-gradient(#1fc627, #37f237);
-        }
-
-        .ButtonG:hover {
-            background: linear-gradient(#3df237, #3bc61f);
-        }
-
-        .ButtonB {
-            border-color: #1849d0; 
-            box-shadow: 3px 4px 0px 0px #214b8a;
-            text-shadow: 0px 1px 0px #053b81;
-            background: linear-gradient(#1f67c6, #378ef2);
-        }
-
-        .ButtonB:hover {
-            background: linear-gradient(#3788f2, #1f54c6);
-        }
     </style>
-    <!--<script>
+
+    <script> //Recargar la pagina
+
         setInterval(updateValues, 2000);
 
         function updateValues() {
-            window.location.href = "/";
-            //location.reload(); 
+            location.reload(); 
         }
-    </script>-->
+    </script>
+
+    <script> //Actualizar imágenes
+        function updateValues() {
+            
+            var temperature = parseFloat(document.getElementById('temperature-value').innerText);
+            var humidity = parseFloat(document.getElementById('humidity-value').innerText);
+            var light = parseInt(document.getElementById('light-value').innerText);
+            var imageElement = document.getElementById('temperature-image');
+
+            if (temperature > 40) {
+                imageElement.src = 'imagenes/imagen_calor.png';
+                body.style.backgroundColor = 'linear-gradient(to bottom, red, white)';
+            } else if(temperature < 20) {
+                imageElement.src = 'imagenes/imagen_frio.png';
+                body.style.backgroundColor = 'linear-gradient(to bottom, blue, white)';
+            }
+            else{
+                body.style.backgroundColor = 'white';
+            }
+
+            var imageElement = document.getElementById('humidity-image');
+
+            if (humidity > 50) {
+                imageElement.src = 'imagenes/imagen_humedo.png';
+                body.style.backgroundColor = 'linear-gradient(to bottom, green, white)';
+            } else if(humidity < 20) {
+                imageElement.src = 'imagenes/imagen_no_humedo.png';
+                body.style.backgroundColor = 'linear-gradient(to bottom, yellow, white)';
+            }
+            else{
+                body.style.backgroundColor = 'white';
+            }
+
+            if (light > 50) {
+                imageElement.src = 'imagenes/imagen_mucha_luz.png';
+            } else {
+                imageElement.src = 'imagenes/imagen_poca_luz.png';
+            }
+        }
+
+        setInterval(updateValues, 2000);
+    </script>
 </head>
-
+<!--<bodyonload="updateValues()">-->
 <body>
-    <h1>Practica 7 SE</h1>
-    <p>Leds y sensores</p>
-
+    <head>
+        <h1 style="font-family: 'Montserrat', sans-serif;">Proyecto Sistemas Embebidos</h1>
+    </head>
+    
     <table>
         <tbody>
+        <div>
+            <tr>
+                <td><h2>Sensores</h2></td>
+            </tr>
             <tr>
                 <td>
-                    <p><a href="/?led"><button class="ButtonB Button">ON/OFF</button></a></p>
+                    <p>Temperatura: </p>
+                </td>
+                <td>
+                    <strong id="temperature-value">%.2f C</strong>
+                    <img id="temperature-image" src="imagenes/imagen_calor.png" alt="Temperatura" width="40" height="40">
                 </td>
             </tr>
             <tr>
                 <td>
-                    <p><a href="/?edoled"><button class="ButtonG Button">Estado led</button></a></p>
+                    <p>Humedad: </p>
                 </td>
                 <td>
-                    <strong> %s </strong>
+                    <strong id="humidity-value">%.2f &#37;</strong>
+                    <img id="humidity-image" src="imagenes/imagen_humedo.png" alt="Humedad" width="40" height="40">
                 </td>
             </tr>
             <tr>
                 <td>
-                    <p><a href="/?activar"><button class="ButtonG Button">Activar sensor</button></a></p>
+                    <p>Porcentaje de luz:</p>
                 </td>
                 <td>
-                    <p><a href="/?desactivar"><button class="ButtonR Button">Desactivar sensor</button></a></p>
+                    <strong id="light-value"> %d &#37;</strong>
+                    <meter id="fuel" min="0" max="99" low="30" high="70" optimum="80" value="%i">
+                        at 50/100
+                    </meter>
+                    <img src="imagenes/imagen_mucha_luz.png" alt="Presion" width="60" height="60">
                 </td>
+                
             </tr>
-            <tr>
-                <td>
-                    <p><a href="/?actualizar"><button class="ButtonB Button">Actualizar sensores</button></a></p>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <p>Who am I:</p>
-                </td>
-                <td>
-                    <strong> %x </strong>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <p>Humedad:</p>
-                </td>
-                <td>
-                    <strong> %lu &#37;</strong>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <p>Temperatura:</p>
-                </td>
-                <td>
-                    <strong> %f C&deg;</strong>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <p>Presion:</p>
-                </td>
-                <td>
-                    <strong> %f Pa</strong>
-                </td>
-            </tr>
-        </tbody>
+        </div>
+    </tbody>
     </table>
 </body>
-
 </html>
